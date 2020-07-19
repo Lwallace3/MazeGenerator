@@ -9,14 +9,13 @@ public class Cell extends JPanel {
     public int y;
     public int width;
     public boolean visited;
-    public Boolean[] walls = new Boolean[4];
+    public ArrayList<Wall> walls = new ArrayList<>();
 
     public Cell(int x, int y, int width) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.visited = false;
-        Arrays.fill(walls, Boolean.TRUE);
     }
 
     public void mark(Graphics g){
@@ -33,16 +32,16 @@ public class Cell extends JPanel {
         int x1 = x * width;
         int y1 = y * width;
 
-        if (walls[0]) {
+        if (walls.get(0) != null) {
             g2d.drawLine(x1, y1, x1 + width, y1);
         }
-        if (walls[1]) {
+        if (walls.get(1) != null) {
             g2d.drawLine(x1 + width, y1, x1 + width, y1 + width);
         }
-        if (walls[2]) {
+        if (walls.get(2) != null) {
             g2d.drawLine(x1 + width, y1 + width, x1, y1 + width);
         }
-        if (walls[3]) {
+        if (walls.get(3) != null) {
             g2d.drawLine(x1, y1 + width, x1, y1);
         }
         if (visited) {
