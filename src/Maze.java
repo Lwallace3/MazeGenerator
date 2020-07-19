@@ -2,11 +2,15 @@ import javax.sound.midi.SysexMessage;
 import javax.swing.*;
 import java.awt.*;
 import java.lang.constant.Constable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Maze extends JPanel {
     public int side_size;
     public Cell[][] grid;
+    public ArrayList<Wall> walls = new ArrayList<>();
     public int w;
     public Cell current_cell;
     Stack<Cell> stack = new Stack<>();
@@ -16,7 +20,7 @@ public class Maze extends JPanel {
         this.w = 1000 / side_size;
         this.grid = new Cell[side_size][side_size];
         initialiseGrid();
-
+        initialiseWalls();
         this.current_cell = grid[0][0];
     }
 
@@ -24,6 +28,25 @@ public class Maze extends JPanel {
         for (int i = 0; i < side_size; i++) {
             for (int j = 0; j < side_size; j++) {
                 grid[i][j] = new Cell(i, j, w);
+            }
+        }
+    }
+
+    public void initialiseWalls(){
+        for (int i = 0; i < side_size; i++) {
+            for (int j = 0; j < side_size; j++) {
+                if(i < side_size - 1){
+                    Wall wall = new Wall(grid[i][j],grid[i+1][j]);
+                    walls.add(wall);
+                    grid[i][j].walls.add(wall);
+                    grid[i+1][j].walls.add(wall);
+                }
+                if(j < side_size - 1){
+                    Wall wall = new Wall(grid[i][j],grid[i][j+1]);
+                    walls.add(wall);
+                    grid[i][j].walls.add(wall);
+                    grid[i][j+1].walls.add(wall);
+                }
             }
         }
     }
@@ -63,24 +86,41 @@ public class Maze extends JPanel {
         }
     }
 
-    private void removeWalls(Cell current_cell, Cell next) {
-        int i = current_cell.x - next.x;
-        int j = current_cell.y - next.y;
+    public void kruskals(Graphics g){
+        ArrayList<Cell> joined_cells = new ArrayList<>();
+        while(joined_cells.size() < side_size*side_size-1) {
+            int rand_x = ThreadLocalRandom.current().nextInt(0, side_size);
+            int rand_y = ThreadLocalRandom.current().nextInt(0, side_size);
+            Cell cell = grid[rand_x][rand_y];
+            Cell next = cell.getNeighbor(grid);
+            if(!joined_cells.contains(next)){
+                cell.mark(g);
+                removeWalls(cell, next);
+                joined_cells.add(cell);
+                joined_cells.add(next);
+                repaint();
+            }
 
-        if (i == 1) {
-            current_cell.walls[3] = false;
-            next.walls[1] = false;
-        }else if (i == -1) {
-            current_cell.walls[1] = false;
-            next.walls[3] = false;
+        }
+    }
+
+    private void removeWalls(Cell current_cell, Cell next) {
+        for(int i = 0; i < current_cell.walls.size(); i++){
+            Wall current_wall = current_cell.walls.get(i);
+            if (current_wall.side_a.equals(current_cell) && current_wall.side_b.equals(next)){
+                current_cell.walls.remove(i);
+            } else if (current_wall.side_a.equals(next) && current_wall.side_b.equals(current_cell)){
+                current_cell.walls.remove(i);
+            }
         }
 
-        if (j == 1) {
-            current_cell.walls[0] = false;
-            next.walls[2] = false;
-        }else if (j == -1) {
-            current_cell.walls[2] = false;
-            next.walls[0] = false;
+        for(int i = 0; i < next.walls.size(); i++){
+            Wall current_wall = next.walls.get(i);
+            if (current_wall.side_a.equals(current_cell) && current_wall.side_b.equals(next)){
+                next.walls.remove(i);
+            } else if (current_wall.side_a.equals(next) && current_wall.side_b.equals(current_cell)){
+                next.walls.remove(i);
+            }
         }
     }
 
